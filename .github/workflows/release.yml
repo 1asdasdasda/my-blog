@@ -7,72 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-        env:
-          DATABASE_URL: postgresql://mock:mock@localhost/mock
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: .next
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: .next
-
-      - name: Download source code
-        uses: actions/download-artifact@v4
-        with:
-          name: source-code
-          path: .
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            .next/**/*
-            package.json
-            package-lock.json
-            tsconfig.json
-            next.config.ts
-            README.md
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  docker:
-    needs: build
+  build-docker:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -81,20 +16,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: .next
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
-        uses: docker/build-push-action@v5
+        run: |
+          docker build -t my-blog:latest .
+          docker save -o my-blog.tar my-blog:latest
+      
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
         with:
-          context: .
-          push: false
-          tags: my-blog:latest
-          cache-from: type=registry,ref=my-blog:buildcache
-          cache-to: type=registry,ref=my-blog:buildcache,mode=max
+          name: my-blog-docker
+          path: my-blog.tar
+          compression-level: 6
+
+  release:
+    needs: build-docker
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: my-blog-docker
+          path: .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: my-blog.tar
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
