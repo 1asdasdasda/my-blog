@@ -26,7 +26,7 @@ jobs:
       - name: Build Next.js
         run: npm run build
         env:
-          DATABASE_URL: postgresql://mock:mock@localhost/mock
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://user:pass@localhost/db' }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

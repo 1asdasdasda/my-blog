@@ -6,6 +6,10 @@ import { eq } from 'drizzle-orm';
 
 // 注册
 export async function POST(request: NextRequest) {
+  if (!db) {
+    return NextResponse.json({ error: '数据库未配置' }, { status: 500 });
+  }
+  
   try {
     const body = await request.json();
     const { username, email, password } = body;
@@ -60,6 +64,10 @@ export async function POST(request: NextRequest) {
 
 // 登录
 export async function PUT(request: NextRequest) {
+  if (!db) {
+    return NextResponse.json({ error: '数据库未配置' }, { status: 500 });
+  }
+  
   try {
     const body = await request.json();
     const { email, password } = body;

@@ -6,6 +6,10 @@ import { eq, desc, and } from 'drizzle-orm';
 
 // 获取文章列表
 export async function GET(request: NextRequest) {
+  if (!db) {
+    return NextResponse.json({ error: '数据库未配置' }, { status: 500 });
+  }
+  
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -48,6 +52,10 @@ export async function GET(request: NextRequest) {
 
 // 创建文章
 export async function POST(request: NextRequest) {
+  if (!db) {
+    return NextResponse.json({ error: '数据库未配置' }, { status: 500 });
+  }
+  
   try {
     const body = await request.json();
     const { title, content, excerpt, coverImage, authorId, status } = body;
