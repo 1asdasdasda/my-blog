@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, schema } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { hashPassword, verifyPassword, generateToken } from '@/lib/utils';
 import { eq } from 'drizzle-orm';
